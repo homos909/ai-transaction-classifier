@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from anthropic import Anthropic 
+from google import genai  
+import os  
 
 class ClassifierProvider(ABC):
     @abstractmethod
@@ -30,9 +32,26 @@ class AnthropicProvider(ClassifierProvider):
         ket_qua = response.content[0].text
         return ket_qua
     
+class GeminiProvider(ClassifierProvider):
+    def __init__(self, api_key):
+        self.client = genai.Client(api_key=api_key)
 
-if __name__ == "__main__":
-    provider = MockProvider()
-    print(provider.classify("Thu tiền bán hàng cho khách A"))
-    print(provider.classify("Trả lương nhân viên tháng 9"))
+    def classify(self, description):
+        prompt = f"Giao dịch sau thuộc Doanh thu hay Chi phí? Chỉ trả lời đúng 1 từ: {description}"
+        response = self.client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt
+        )
+        return response.text.strip()
+        
+    
+#if __name__ == "__main__":
+#    api_key = os.environ.get("GEMINI_API_KEY")
+#    provider = GeminiProvider(api_key=api_key)
+#    print(provider.classify("Chuyển khoản 5,000,000đ"))
+#    print(provider.classify("Hoàn tiền cho khách hàng do lỗi đơn hàng"))
+#if __name__ == "__main__":
+#    provider = MockProvider()
+#    print(provider.classify("Thu tiền bán hàng cho khách A"))
+#    print(provider.classify("Trả lương nhân viên tháng 9"))
         
